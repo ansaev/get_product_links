@@ -2,20 +2,57 @@
 import MySQLdb
 
 
-class DB:
+class ModelProducts:
+    __db_wrapper = None
+
+    def __init__(self):
+        self.__db_wrapper = DB_MySQL_wrapper()
+
+    def init(self, options):
+
+        self.__db_wrapper.init(options)
+        if self.__db_wrapper.ok():
+            return True
+        else:
+            return False
+
+    def ok(self):
+        if self.__db_wrapper and self.__db_wrapper.ok():
+            return True
+        return False
+
+    def getProducts(self, options={}):
+        if not 'avaible_cats' in options:
+            options['avaible_cats'] = True
+
+        products = []
+        sql = "SELECT `cscart_product_descriptions`.`product_id`,`cscart_product_descriptions`.`product` FROM `cscart_product_descriptions` LEFT JOIN `cscart_products_categories` ON `cscart_products_categories`.`product_id` =  `cscart_product_descriptions`.`product_id` WHERE `cscart_products_categories`.`category_id` in (SELECT `category_id` FROM `cscart_categories` WHERE " + " `status`='A' " + ") "
+        products = self.__db_wrapper.sql(sql)
+        if products:
+            return products
+        else:
+            return False
+
+
+class DB_MySQL_wrapper:
     __connection = None
 
-    def __init__(self, options={}):
+    def __init__(self):
         pass
 
-    def connect(self, options):
+    def ok(self):
+        if self.__connection:
+            return True
+        return False
+
+    def init(self, options):
         """ Connect to MySQL database """
         if not options:
-             return False
+            return False
         if not ('host' in options):
-             return False
+            return False
         if not ('database' in options):
-             return False
+            return False
         if not ('user' in options):
             return False
         if not ('password' in options):
@@ -42,7 +79,8 @@ class DB:
         except MySQLdb.Error as e:
             print(e)
             return False
-    def sql(self,request):
+
+    def sql(self, request):
         try:
             self.__connection.query(request)
             rez = self.__connection.store_result()
