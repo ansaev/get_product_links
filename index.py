@@ -15,7 +15,18 @@ products.init(db_options)
 
 print str(products.ok())
 
-print(products.getProducts())
+rez_data = []
+for i,row in enumerate(products.getProducts()):
+    for j,cell in enumerate(row):
+        rez_data[i].append(cell)
+    rez_data.append([])
+    id = str(row[0])
+    link = products.getProductLink(id)
+    print(link)
+
+
+
+
 """
 rows = db.sql(
     "SELECT `cscart_product_descriptions`.`product_id`,`cscart_product_descriptions`.`product` FROM `cscart_product_descriptions` LEFT JOIN `cscart_products_categories` ON `cscart_products_categories`.`product_id` =  `cscart_product_descriptions`.`product_id` WHERE `cscart_products_categories`.`category_id` in (SELECT `category_id` FROM `cscart_categories` WHERE `status`='A') ")

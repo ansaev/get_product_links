@@ -1,6 +1,6 @@
 # coding: utf8
 import MySQLdb
-
+import string
 
 class ModelProducts:
     __db_wrapper = None
@@ -32,6 +32,15 @@ class ModelProducts:
             return products
         else:
             return False
+    def getProductLink(self,id,options = {}):
+        sql = "SELECT `name`,`path` FROM `cscart_seo_names` WHERE  `type`='p' and `object_id`=" + id + " limit 1 "
+        link = self.__db_wrapper.sql(sql)
+        if not link:
+            return False
+        rez_link = {}
+        rez_link['link'] = link[0][0]
+        rez_link['path'] = string.split(link[0][1], '/') if len(string.split(link[0][1], '/')) > 0 else False
+        return rez_link
 
 
 class DB_MySQL_wrapper:
