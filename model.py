@@ -1,6 +1,7 @@
 # coding: utf8
 import MySQLdb
 import string
+from config import site
 
 class ModelProducts:
     __db_wrapper = None
@@ -32,15 +33,32 @@ class ModelProducts:
             return products
         else:
             return False
-    def getProductLink(self,id,options = {}):
-        sql = "SELECT `name`,`path` FROM `cscart_seo_names` WHERE  `type`='p' and `object_id`=" + id + " limit 1 "
+    def getCatLink(self,id):
+        sql = "SELECT `name` FROM `cscart_seo_names` WHERE  `type`='c' and `object_id`=" + id + " limit 1 "
+        row = self.__db_wrapper.sql(sql)
+        return row[0][0]
+
+
+
+    def __getProductLink(self,id,options = {}):
+        sql = "SELECT `name`,`path` FROM `cscart_seo_names` WHERE  `type`='p' and `object_id`=" + str(id) + " limit 1 "
         link = self.__db_wrapper.sql(sql)
         if not link:
             return False
         rez_link = {}
         rez_link['link'] = link[0][0]
         rez_link['path'] = string.split(link[0][1], '/') if len(string.split(link[0][1], '/')) > 0 else False
+
         return rez_link
+
+    def getProductLink(self,id,options = {}):
+        link = self.__getProductLink(id)
+        cats_link = ''
+        for k, numb in enumerate(link['path']):
+            cats_link += '/' + self.getCatLink(numb)
+        cats_link = site + cats_link + '/' + link['link'] + '/'
+
+        return cats_link
 
 
 class DB_MySQL_wrapper:
