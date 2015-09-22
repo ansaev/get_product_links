@@ -25,7 +25,6 @@ class ModelProducts:
     def getProducts(self, options={}):
         if not 'avaible_cats' in options:
             options['avaible_cats'] = True
-
         products = []
         sql = "SELECT `cscart_product_descriptions`.`product_id`,`cscart_product_descriptions`.`product` FROM `cscart_product_descriptions` LEFT JOIN `cscart_products_categories` ON `cscart_products_categories`.`product_id` =  `cscart_product_descriptions`.`product_id` WHERE `cscart_products_categories`.`category_id` in (SELECT `category_id` FROM `cscart_categories` WHERE " + " `status`='A' " + ") "
         products = self.__db_wrapper.sql(sql)
@@ -33,12 +32,11 @@ class ModelProducts:
             return products
         else:
             return False
+
     def getCatLink(self,id):
         sql = "SELECT `name` FROM `cscart_seo_names` WHERE  `type`='c' and `object_id`=" + id + " limit 1 "
         row = self.__db_wrapper.sql(sql)
         return row[0][0]
-
-
 
     def __getProductLink(self,id,options = {}):
         sql = "SELECT `name`,`path` FROM `cscart_seo_names` WHERE  `type`='p' and `object_id`=" + str(id) + " limit 1 "
