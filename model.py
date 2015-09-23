@@ -3,72 +3,76 @@ import MySQLdb
 import string
 from config import site
 
-class ModelProducts:
-    __db_wrapper = None
+
+class Model(object):
+    db_wrapper = None
+    gg = 'hey you'
 
     def __init__(self):
-        self.__db_wrapper = DB_MySQL_wrapper()
+        self.db_wrapper = DB_MySQL_wrapper()
 
     def init(self, options):
 
-        self.__db_wrapper.init(options)
-        if self.__db_wrapper.ok():
+        self.db_wrapper.init(options)
+        if self.db_wrapper.ok():
             return True
         else:
             return False
 
     def ok(self):
-        if self.__db_wrapper and self.__db_wrapper.ok():
+        if self.db_wrapper and self.db_wrapper.ok():
             return True
         return False
+
+
+class ModelProducts(Model):
 
     def getProducts(self, options={}):
         if not 'avaible_cats' in options:
             options['avaible_cats'] = True
-        products = []
         sql = "SELECT `cscart_product_descriptions`.`product_id`,`cscart_product_descriptions`.`product` FROM `cscart_product_descriptions` LEFT JOIN `cscart_products_categories` ON `cscart_products_categories`.`product_id` =  `cscart_product_descriptions`.`product_id` WHERE `cscart_products_categories`.`category_id` in (SELECT `category_id` FROM `cscart_categories` WHERE " + " `status`='A' " + ") "
-        products = self.__db_wrapper.sql(sql)
+        products = self.db_wrapper.sql(sql)
         if products:
             return products
         else:
             return False
 
-    def getCatLink(self,id):
+    def getCatLink(self, id):
         sql = "SELECT `name` FROM `cscart_seo_names` WHERE  `type`='c' and `object_id`=" + id + " limit 1 "
-        row = self.__db_wrapper.sql(sql)
+        row = self.db_wrapper.sql(sql)
         return row[0][0]
 
-    def __getProductLink(self,id,options = {}):
+    def __getProductLink(self, id, options={}):
         sql = "SELECT `name`,`path` FROM `cscart_seo_names` WHERE  `type`='p' and `object_id`=" + str(id) + " limit 1 "
-        link = self.__db_wrapper.sql(sql)
+        link = self.db_wrapper.sql(sql)
         if not link:
             return False
         rez_link = {}
         rez_link['link'] = link[0][0]
         rez_link['path'] = string.split(link[0][1], '/') if len(string.split(link[0][1], '/')) > 0 else False
-
         return rez_link
 
-    def getProductLink(self,id,options = {}):
+    def getProductLink(self, id, options={}):
         link = self.__getProductLink(id)
         cats_link = ''
         for k, numb in enumerate(link['path']):
             cats_link += '/' + self.getCatLink(numb)
         cats_link = site + cats_link + '/' + link['link'] + '/'
-
         return cats_link
-    def getProductsLinksData(self,options = {}):
+
+    def getProductsLinksData(self, options={}):
         rez_data = []
-        for i,row in enumerate(self.getProducts()):
+        for i, row in enumerate(self.getProducts()):
             rez_data.append([])
-            for j,cell in enumerate(row):
+            for j, cell in enumerate(row):
                 rez_data[i].append(cell)
             id = row[0]
             link = self.getProductLink(id)
             rez_data[i].append(link)
         return rez_data
 
-class DB_MySQL_wrapper:
+
+class DB_MySQL_wrapper(object):
     __connection = None
 
     def __init__(self):
