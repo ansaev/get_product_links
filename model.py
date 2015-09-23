@@ -57,7 +57,16 @@ class ModelProducts:
         cats_link = site + cats_link + '/' + link['link'] + '/'
 
         return cats_link
-
+    def getProductsLinksData(self,options = {}):
+        rez_data = []
+        for i,row in enumerate(self.getProducts()):
+            rez_data.append([])
+            for j,cell in enumerate(row):
+                rez_data[i].append(cell)
+            id = row[0]
+            link = self.getProductLink(id)
+            rez_data[i].append(link)
+        return rez_data
 
 class DB_MySQL_wrapper:
     __connection = None
