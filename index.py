@@ -9,5 +9,5 @@ products.init(db_options)
 print str(products.ok())
 if products.ok():
     #get links to all products
-    rez_data = products.getProductsLinksData()
+    rez_data = products.getProductsLinksDataExtended()
     write_in_xl(rez_data)
