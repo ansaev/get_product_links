@@ -83,44 +83,70 @@ class ModelProducts(Model):
         row = rows[0][0]
         return row
 
-    def getProductFeaturesValues(self, prod_id, options={}):
-        sql = "SELECT `feature_id`,`variant_id`,`value_int`,`value` FROM `cscart_product_features_values` WHERE `product_id` = " + str(
-            prod_id)
+    def getProductFeaturesIds(self, prod_id, options={}):
+        sql = "SELECT `feature_id` FROM `cscart_product_features_values` WHERE `product_id` = " + str(prod_id)
         features = self.db_wrapper.sql(sql)
-        # need to changes features to summarize features id
-        rez_features = []
-        rez_index = -1
+        rez_fetures_ids = []
         if len(features) > 0:
-            # if there are some features
-            for i, feature_link in enumerate(features):
-                if len(feature_link) > 0:
-                    rez_index += 1
-                    feature_id = feature_link[0]
-                    feature_name = self.getFeatureName(feature_id)
-                    rez_features.append(feature_name)
-                    feature_variant = feature_link[1]
-                    value = ''
-                    if feature_variant == 0:
-                        feature_value_int = feature_link[2]
-                        feature_value = feature_link[3]
-                        value = feature_value_int if feature_value_int is not None else feature_value
-                    else:
-                        sql = "SELECT `variant` FROM `cscart_product_feature_variant_descriptions` WHERE `variant_id` = " + str(feature_variant)
-                        rows = self.db_wrapper.sql(sql)
-                        if len(rows) > 0:
-                            if len(rows[0][0]) >0:
-                                value = rows[0][0]
-                    rez_features.append(value)
+            for feat_id_list in features:
+                if len(feat_id_list) > 0:
+                    rez_fetures_ids.append(feat_id_list[0])
 
-        return rez_features
+        if len(rez_fetures_ids) > 0:
+            return rez_fetures_ids
+        else:
+            return False
+
+    def getFeatureValue(self, prod_id, feat_id, options = {}):
+        sql = "SELECT `variant_id`,`value_int`,`value` FROM `cscart_product_features_values` WHERE `product_id` = " + str(prod_id) + " AND `feature_id` = " + str(feat_id)
+        feature_values = self.db_wrapper.sql(sql)
+        if len(feature_values) < 1:
+            return ''
+        feature_variant = feature_values[0][0]
+        if feature_variant == 0:
+            feature_value_int = feature_values[0][1]
+            feature_value = feature_values[0][2]
+            value = feature_value_int if feature_value_int is not None else feature_value
+        else:
+            sql = "SELECT `variant` FROM `cscart_product_feature_variant_descriptions` WHERE `variant_id` = " + str(feature_variant)
+            rows = self.db_wrapper.sql(sql)
+            if len(rows) > 0:
+                if len(rows[0][0]) >0:
+                    value = rows[0][0]
+        return value
 
     def getProductsLinksDataExtended(self, options={}):
         rez_data = self.getProductsLinksData()
+        features_id = []
         for i, row in enumerate(rez_data):
             id = row[0]
-            feature = self.getProductFeaturesValues(id)
-            # rez_data[i].append(id)
+            prod_ids = self.getProductFeaturesIds(id)
+            if not prod_ids:
+                continue
+            if len(features_id) > 0:
+                for el_ex in prod_ids:
+                    exist = False
+                    for el_in in features_id:
+                        if el_in == el_ex:
+                            exist = True
+                    if not exist:
+                        features_id.append(el_ex)
+            else:
+                features_id = prod_ids
+
+        first_line = []
+        for feat_id in features_id:
+            first_line.append(self.getFeatureName(feat_id))
+        first_line = (lambda ls, ins: [ls[i-ins] if i > ins-1 else '' for i in range(len(ls) + ins)])(first_line, len(rez_data[0]))
+
+        for i, row in enumerate(rez_data):
+            id = row[0]
+            feature = []
+            for feat_id in features_id:
+                feature.append(self.getFeatureValue(id, feat_id))
             rez_data[i] = (lambda l1, l2: [l1[i] if i < len(l1)  else l2[i - len(l1)] for i in range(len(l1) + len(l2))])(rez_data[i], feature)
+
+        rez_data = (lambda rows, row_first:[rows[i-1] if i>0 else row_first for i in range(len(rows) + 1)])(rez_data, first_line)
 
         return rez_data
 
