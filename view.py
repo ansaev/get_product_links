@@ -6,3 +6,4 @@ def write_in_xl(data):
         for c, col in enumerate(row):
             list.write(r, c, label=col)
     book.save('/home/ansaev/repos/get_product_links/hey_you_13.xls')
+867
